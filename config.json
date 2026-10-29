@@ -1,0 +1,38 @@
+{
+  "_note": "가격은 BizRouter 통합 모델 가격표 상세(2026-10-28, 1 USD = 1,413원)의 원화 단가(100만 토큰당). tiers는 요청 하나의 프롬프트 토큰(입력+캐시 읽기+캐시 쓰기)이 max_prompt_tokens 이하일 때 적용. budget_krw와 g_per_krw는 실험 전 결정 사항이므로 비워 둠",
+  "models": [
+    {
+      "key": "A",
+      "id": "anthropic/claude-sonnet-5.5",
+      "behavesAs": "claude-sonnet-5-5",
+      "label": "Claude Sonnet 5.5 (고성능)",
+      "match": ["sonnet"],
+      "tiers": [
+        { "max_prompt_tokens": null, "input": 2826, "output": 14130, "cache_read": 141, "cache_write_5m": 3533, "cache_write_1h": 5652 }
+      ],
+      "carbon_g_per_mtok": { "input": null, "output": null }
+    },
+    {
+      "key": "B",
+      "id": "anthropic/claude-haiku-5.5",
+      "behavesAs": "claude-haiku-5-5",
+      "label": "Claude Haiku 5.5 (경량)",
+      "match": ["haiku"],
+      "tiers": [
+        { "max_prompt_tokens": 100000, "input": 141, "output": 707, "cache_read": 14, "cache_write_5m": 177, "cache_write_1h": 283 },
+        { "max_prompt_tokens": null, "input": 707, "output": 3533, "cache_read": 71, "cache_write_5m": 883, "cache_write_1h": 1413 }
+      ],
+      "carbon_g_per_mtok": { "input": null, "output": null }
+    }
+  ],
+  "carbon_mode": "price_proportional",
+  "g_per_krw": null,
+  "carbon_cache_read_factor": 0.1,
+  "show_switch_cost": true,
+  "cache_ttl_minutes": 5,
+  "study_start": "2026-11-19T00:00:00+09:00",
+  "weeks": [
+    { "name": "3주차", "start": "2026-11-19T00:00:00+09:00", "end": "2026-11-26T00:00:00+09:00", "budget_krw": null },
+    { "name": "4주차", "start": "2026-11-26T00:00:00+09:00", "end": "2026-12-03T00:00:00+09:00", "budget_krw": null }
+  ]
+}

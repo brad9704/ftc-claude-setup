@@ -1,0 +1,6 @@
+# Cloud Shell(리눅스)에서 실행되므로 줄바꿈을 LF로 고정. CRLF가 섞이면 bash 스크립트가 깨짐
+* text=auto eol=lf
+*.sh text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
