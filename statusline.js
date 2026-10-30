@@ -68,13 +68,29 @@ function costKrw(m, p) {
   );
 }
 
+// 100만 토큰당 탄소(g). energy 모드: kWh/Mtok × 서버 오버헤드 × PUE × 전력망 계수(g/kWh).
+// per_token 모드: carbon_g_per_mtok를 그대로 씀. 값이 하나라도 비면 null(상태줄에 "탄소 계수 미설정")
+function gPerMtok(m) {
+  if (config.carbon_mode === "energy") {
+    const e = m.kwh_per_mtok || {};
+    const k = config.server_overhead, pue = config.pue, grid = config.grid_g_per_kwh;
+    if (e.input == null || e.output == null || k == null || pue == null || grid == null) return null;
+    const f = k * pue * grid;
+    return { input: e.input * f, output: e.output * f };
+  }
+  const c = m.carbon_g_per_mtok || {};
+  if (c.input == null || c.output == null) return null;
+  return { input: c.input, output: c.output };
+}
+
 function carbonG(m, p) {
   if (config.carbon_mode === "price_proportional") {
     return config.g_per_krw == null ? null : costKrw(m, p) * config.g_per_krw;
   }
-  const cin = m.carbon_g_per_mtok.input;
-  const cout = m.carbon_g_per_mtok.output;
-  if (cin == null || cout == null) return null;
+  const gm = gPerMtok(m);
+  if (!gm) return null;
+  const cin = gm.input;
+  const cout = gm.output;
   const f = config.carbon_cache_read_factor;
   return ((p.input + p.w5 + p.w1h + p.read * f) * cin + p.output * cout) / 1e6;
 }
@@ -237,8 +253,8 @@ function switchHint(input, current, lastTs) {
   if (config.carbon_mode === "price_proportional") {
     g = config.g_per_krw == null ? null : won * config.g_per_krw;
   } else {
-    const cin = other.carbon_g_per_mtok.input;
-    g = cin == null ? null : (ctx * cin) / 1e6;
+    const gm = gPerMtok(other);
+    g = gm ? (ctx * gm.input) / 1e6 : null;
   }
   const name = other.label.replace(/\s*\(.*\)\s*$/, "");
   const leftMin = Math.max(1, Math.ceil((ttl - (Date.now() - lastTs)) / 60000));

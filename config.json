@@ -10,7 +10,8 @@
       "tiers": [
         { "max_prompt_tokens": null, "input": 2826, "output": 14130, "cache_read": 141, "cache_write_5m": 3533, "cache_write_1h": 5652 }
       ],
-      "carbon_g_per_mtok": { "input": null, "output": null }
+      "carbon_g_per_mtok": { "input": 0.0, "output": 0.0 },
+      "kwh_per_mtok": { "input": 0.128, "output": 0.639 }
     },
     {
       "key": "B",
@@ -22,10 +23,30 @@
         { "max_prompt_tokens": 100000, "input": 141, "output": 707, "cache_read": 14, "cache_write_5m": 177, "cache_write_1h": 283 },
         { "max_prompt_tokens": null, "input": 707, "output": 3533, "cache_read": 71, "cache_write_5m": 883, "cache_write_1h": 1413 }
       ],
-      "carbon_g_per_mtok": { "input": null, "output": null }
+      "carbon_g_per_mtok": { "input": 0.0, "output": 0.0 },
+      "kwh_per_mtok": { "input": 0.0371, "output": 0.186 }
     }
   ],
-  "carbon_mode": "price_proportional",
+  "_carbon_note": "carbon_mode가 energy일 때 탄소(g) = (입력 + 캐시 쓰기 + 캐시 읽기 × carbon_cache_read_factor) × kwh_per_mtok.input + 출력 × kwh_per_mtok.output, 모두 ÷ 10^6 × server_overhead × pue × grid_g_per_kwh. 각 값의 출처와 계산은 _carbon_sources. 실험 기간에는 값을 바꾸지 않는다",
+  "_carbon_sources": [
+    "[S1] Oviedo, F., Kazhamiaka, F., Choukse, E., Kim, A., Luers, A., Nakagawa, M., Bianchini, R., & Lavista Ferres, J. M. (2026). Energy use of AI inference, efficiency pathways, and test-time scaling. Joule, 10(8), 102430. https://doi.org/10.1016/j.joule.2026.102430 . 표준 질의(입력 500, 출력 300 토큰) 중앙값: 200B 초과 프런티어급 0.31 Wh(IQR 0.16-0.60), Llama 3.1 70B 0.09 Wh(IQR 0.05-0.17). 8xH100 FP8 노드 전체 전력, PUE 포함(로그정규, P5-P95 1.05-1.40)",
+    "[S2] Elsworth, C., Huang, K., Patterson, D., Schneider, I., Sedivy, R., Goodman, S., Townsend, B., Ranganathan, P., Dean, J., Vahdat, A., Gomes, B., & Manyika, J. (2025). Measuring the environmental impact of delivering AI at Google Scale. arXiv:2508.15734. Gemini 텍스트 프롬프트 중앙값 0.24 Wh = 가속기 0.14 + 호스트 CPU·DRAM 0.06 + 대기 용량 0.02 + 데이터센터 오버헤드 0.02",
+    "[S3] Jegham, N., Abdelatti, M., Koh, C. Y., Elmoubarki, L., & Hendawi, A. (2025). How Hungry is AI? Benchmarking Energy, Water, and Carbon Footprint of LLM Inference. arXiv:2505.09598 (v6). Table 1: Anthropic(AWS) PUE 1.14",
+    "[S4] 기후에너지환경부(2025-12-17 공표). 국가 전력 배출계수 0.4173 tCO2eq/MWh(2023년 온실가스 통계 기준). 보도: 에너지신문 https://www.energy-news.co.kr/news/articleView.html?idxno=221107",
+    "[S5] Anthropic 가격 구조(출력 단가 = 입력 × 5, 캐시 읽기 = 입력 × 0.1). 에너지 측정값이 아니라 가격을 대리 지표로 쓴 가정",
+    "[계산 1] S1의 PUE 분포 중앙값 = sqrt(1.05 × 1.40) = 1.212 으로 나눠 IT 전력만 남김: 프런티어 0.31 / 1.212 = 0.256 Wh, 70B 0.09 / 1.212 = 0.0742 Wh",
+    "[계산 2] 입력 대 출력 토큰당 에너지 비를 1:5로 둠(S5). 표준 질의 = 500e + 300 × 5e = 2000e. Sonnet(프런티어급 가정): e = 0.256 / 2000 Wh → 입력 0.128, 출력 0.639 kWh/Mtok. Haiku(Llama 3.1 70B급 가정): e = 0.0742 / 2000 Wh → 입력 0.0371, 출력 0.186 kWh/Mtok",
+    "[가정] Claude Sonnet 5.5와 Haiku 5.5의 크기와 서빙 하드웨어는 공개되지 않음. Sonnet을 S1의 200B 초과 프런티어급, Haiku를 Llama 3.1 70B급으로 대응시킴",
+    "[계산 3] server_overhead = (가속기 + 호스트 + 대기) / (가속기 + 호스트) = 0.22 / 0.20 = 1.10 (S2). S1 값이 이미 노드 전체(호스트 포함)이므로 대기 용량만 더함",
+    "[계산 4] pue = 1.14 (S3, AWS). grid_g_per_kwh = 417.3 (S4). 추론이 실제로 어느 전력망에서 처리되는지와 무관하게 한국 전력망을 가정",
+    "[계산 5] carbon_cache_read_factor = 0.1 (S5, 가격 비율. 에너지 근거 없음). 캐시 쓰기는 입력과 같은 에너지로 셈",
+    "[민감도] S3 Table 4(Claude 3.7 Sonnet, 질의 길이 세 가지)를 a + 입력 × b_in + 출력 × b_out으로 풀면 입력 0.147, 출력 2.72 kWh/Mtok(PUE·비GPU 전력 포함). 출력은 이 설정의 약 4배. S3는 API 지연시간 기반이라 Claude 3.5 Haiku가 Sonnet보다 크게 나오는 등 모델 크기를 반영하지 못해 주 값으로 쓰지 않음"
+  ],
+  "carbon_mode": "energy",
+  "server_overhead": 1.10,
+  "pue": 1.14,
+  "grid_g_per_kwh": 417.3,
+  "grid_label": "한국 전력망 가정 (2023년 기준 국가 전력 배출계수)",
   "g_per_krw": null,
   "carbon_cache_read_factor": 0.1,
   "show_switch_cost": true,

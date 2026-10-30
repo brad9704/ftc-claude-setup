@@ -79,6 +79,9 @@ if (MODE === "bizrouter") {
 }
 fs.writeFileSync(path.join(FTC_DIR, "mode.json"), JSON.stringify({ mode: MODE }) + "\n");
 
+// 캐시 수명: config.json의 cache_ttl_minutes가 60 이상이면 1시간, 아니면 5분
+const TTL = (config.cache_ttl_minutes || 5) >= 60 ? "1h" : "5m";
+
 Object.assign(s.env, {
   // 별칭과 백그라운드 작업이 허용 목록 밖의 모델을 부르지 않도록 고정
   ANTHROPIC_DEFAULT_OPUS_MODEL: idOf(A),
@@ -94,10 +97,16 @@ Object.assign(s.env, {
   // 응답 뒤에 다음 프롬프트를 회색으로 제안하는 기능 끄기. 제안 생성 요청이 매 턴 따로 과금된다
   CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION: "false",
   // 캐시 수명을 config의 cache_ttl_minutes(5 또는 60)에 맞춰 고정. 상태줄의 전환 비용 계산도 같은 값을 씀
-  CLAUDE_CODE_PROMPT_CACHE_TTL: (config.cache_ttl_minutes || 5) >= 60 ? "1h" : "5m",
+  CLAUDE_CODE_PROMPT_CACHE_TTL: TTL,
+  CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL: TTL,
 });
+// 5분이면 최우선 순위 변수로 한 번 더 고정(다른 설정이나 ENABLE_PROMPT_CACHING_1H가 있어도 5분)
+if (TTL === "5m") s.env.FORCE_PROMPT_CACHING_5M = "1";
+else delete s.env.FORCE_PROMPT_CACHING_5M;
+s.promptCacheTtl = TTL;
+s.subagentPromptCacheTtl = TTL;
 // 1시간 캐시에서는 방치된 대화를 캐시 만료 직전에 자동 압축할 수 있음. 학생 모르게 비용이 나가므로 끔
-if ((config.cache_ttl_minutes || 5) >= 60) s.idleCompaction = false;
+if (TTL === "1h") s.idleCompaction = false;
 
 s.promptSuggestionEnabled = false;
 s.availableModels = [idOf(A), idOf(B)];
