@@ -320,13 +320,16 @@ function main(input) {
   } else {
     line2.push("예산 기간 아님");
   }
-  const ss = Date.parse(config.study_start);
-  const cum = ledger.filter((e) => e.ts >= ss);
-  if (turn.carbon == null || cum.some((e) => e.carbon == null)) {
+  // 탄소 계수가 갖춰졌는지는 설정만으로 판단한다(아직 응답이 없는 새 대화에서도 "미설정"으로 보이지 않게).
+  // 누적 탄소는 첫째 줄의 누적 금액과 같은 범위(전체 사용 기록)로 더한다.
+  const carbonReady = config.carbon_mode === "price_proportional"
+    ? config.g_per_krw != null
+    : config.models.every((x) => gPerMtok(x) != null);
+  if (!carbonReady) {
     line2.push("탄소 계수 미설정");
   } else {
-    line2.push("이번 턴 탄소 " + fmtG(turn.carbon));
-    line2.push("누적 탄소 " + fmtG(cum.reduce((a, e) => a + e.carbon, 0)));
+    line2.push("이번 턴 탄소 " + fmtG(turn.n > 0 && turn.carbon != null ? turn.carbon : 0));
+    line2.push("누적 탄소 " + fmtG(ledger.reduce((a, e) => a + (e.carbon || 0), 0)));
   }
 
   let out = line1.join(" | ") + "\n" + lineTok + "\n" + line2.join(" | ");
