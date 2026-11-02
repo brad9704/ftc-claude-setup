@@ -7,7 +7,7 @@ ID="${1:?학번을 인자로 주십시오 (예: bash collect.sh 20261234)}"
 OUT="$HOME/ftc-logs-$ID-$(date +%Y%m%d).tgz"
 cd "$HOME/.claude"
 ITEMS=(projects)
-for p in ftc/switch-log.jsonl ftc/view-log.jsonl ftc/browser-errors.jsonl ftc/config.json ftc/version.json ftc/snap; do
+for p in ftc/switch-log.jsonl ftc/view-log.jsonl ftc/browser-errors.jsonl ftc/config.json ftc/version.json ftc/topup.jsonl ftc/snap; do
   [ -e "$p" ] && ITEMS+=("$p")
 done
 echo "묶는 중: ${ITEMS[*]}"

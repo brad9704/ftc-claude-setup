@@ -21,7 +21,7 @@ const FTC_DIR = path.join(CLAUDE_DIR, "ftc");
 const SRC = __dirname;
 
 fs.mkdirSync(FTC_DIR, { recursive: true });
-for (const f of ["config.json", "statusline.js", "switch-log.js", "snapshot.js", "serve.js", "update-check.js"]) {
+for (const f of ["config.json", "statusline.js", "switch-log.js", "snapshot.js", "serve.js", "update-check.js", "topup.js"]) {
   fs.copyFileSync(path.join(SRC, f), path.join(FTC_DIR, f));
 }
 

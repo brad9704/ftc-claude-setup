@@ -334,9 +334,17 @@ function main(input) {
     const ws = Date.parse(week.start);
     const we = Date.parse(week.end);
     const spent = ledger.filter((e) => e.ts >= ws && e.ts < we).reduce((a, e) => a + e.cost, 0);
-    const left = Math.max(0, week.budget_krw - spent);
-    const pct = Math.round((left / week.budget_krw) * 100);
-    line2.push("이번 주 남은 예산 " + fmtWon(left) + " / " + fmtWon(week.budget_krw) + " (" + pct + "%)");
+    // 연구진이 키 한도를 올려 준 추가 지급액(topup.js가 기록)을 이번 주 예산에 더한다
+    let extra = 0;
+    try {
+      for (const line of fs.readFileSync(path.join(FTC_DIR, "topup.jsonl"), "utf8").split("\n")) {
+        try { const r = JSON.parse(line); if (r.week === week.name && r.amount > 0) extra += r.amount; } catch (e) { /* 빈 줄 */ }
+      }
+    } catch (e) { /* 추가 지급 없음 */ }
+    const budget = week.budget_krw + extra;
+    const left = Math.max(0, budget - spent);
+    const pct = Math.round((left / budget) * 100);
+    line2.push("이번 주 남은 예산 " + fmtWon(left) + " / " + fmtWon(budget) + (extra > 0 ? " (추가 " + fmtWon(extra) + " 포함)" : "") + " (" + pct + "%)");
   } else if (week) {
     line2.push(week.name + " 예산 미설정");
   } else {
