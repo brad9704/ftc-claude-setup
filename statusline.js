@@ -279,6 +279,28 @@ function fmtG(x) {
   return x < 10 ? x.toFixed(2) + "g" : x.toFixed(1) + "g";
 }
 
+// 설정 업데이트 안내. 10분에 한 번 백그라운드로 GitHub 최신 커밋을 확인하고(update-check.js),
+// 설치한 커밋(version.json)과 다르면 한 줄을 더 띄운다. 상태줄 자체는 네트워크를 기다리지 않는다.
+function updateHint() {
+  const ver = readJson(path.join(FTC_DIR, "version.json"), null);
+  if (!ver || !ver.commit || !ver.remote) return null;
+  const chkPath = path.join(FTC_DIR, "update-check.json");
+  const chk = readJson(chkPath, null);
+  const INTERVAL = 10 * 60 * 1000;
+  if (!chk || Date.now() - (chk.checked_at || 0) > INTERVAL) {
+    try {
+      // 확인 중에 상태줄이 다시 불려도 중복 실행하지 않도록 시각을 먼저 적어 둔다
+      fs.writeFileSync(chkPath, JSON.stringify(Object.assign({}, chk || {}, { checked_at: Date.now() })));
+      const { spawn } = require("child_process");
+      spawn(process.execPath, [path.join(FTC_DIR, "update-check.js")], { detached: true, stdio: "ignore" }).unref();
+    } catch (e) { /* 확인 실패는 무시 */ }
+  }
+  if (chk && chk.ok && chk.remote && chk.remote !== ver.commit) {
+    return "설정 업데이트 있음: 새 터미널 탭에서 cd ~/ftc-claude-setup && git pull && bash init.sh (키 입력은 Enter)";
+  }
+  return null;
+}
+
 function main(input) {
   if (!config) {
     process.stdout.write("설정 파일(~/.claude/ftc/config.json)이 없음");
@@ -333,6 +355,8 @@ function main(input) {
   }
 
   let out = line1.join(" | ") + "\n" + lineTok + "\n" + line2.join(" | ");
+  const upd = updateHint();
+  if (upd) out += "\n" + upd;
   const hint = switchHint(input, m, turn.lastTs);
   if (hint) out += "\n" + hint;
   process.stdout.write(out);

@@ -21,8 +21,17 @@ const FTC_DIR = path.join(CLAUDE_DIR, "ftc");
 const SRC = __dirname;
 
 fs.mkdirSync(FTC_DIR, { recursive: true });
-for (const f of ["config.json", "statusline.js", "switch-log.js", "snapshot.js", "serve.js"]) {
+for (const f of ["config.json", "statusline.js", "switch-log.js", "snapshot.js", "serve.js", "update-check.js"]) {
   fs.copyFileSync(path.join(SRC, f), path.join(FTC_DIR, f));
+}
+
+// 설치한 설정의 버전(저장소 커밋). 상태줄이 GitHub의 최신 커밋과 비교해 업데이트 안내를 띄운다.
+{
+  const { execFileSync } = require("child_process");
+  const git = (...a) => { try { return execFileSync("git", ["-C", SRC, ...a], { stdio: ["ignore", "pipe", "ignore"] }).toString().trim(); } catch (e) { return null; } };
+  const ver = { commit: git("rev-parse", "HEAD"), remote: git("remote", "get-url", "origin"), installed_at: new Date().toISOString() };
+  fs.writeFileSync(path.join(FTC_DIR, "version.json"), JSON.stringify(ver) + "\n");
+  try { fs.unlinkSync(path.join(FTC_DIR, "update-check.json")); } catch (e) { /* 없음 */ }
 }
 
 // 작업 폴더와 CLAUDE.md(스택 지정만). 학생이 이미 고쳤을 수 있으므로 없을 때만 만든다.
