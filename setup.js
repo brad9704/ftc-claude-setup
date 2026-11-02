@@ -90,6 +90,8 @@ fs.writeFileSync(path.join(FTC_DIR, "mode.json"), JSON.stringify({ mode: MODE })
 
 // 캐시 수명: config.json의 cache_ttl_minutes가 60 이상이면 1시간, 아니면 5분
 const TTL = (config.cache_ttl_minutes || 5) >= 60 ? "1h" : "5m";
+// 사고 강도: config.json의 effort_level (기본 medium)
+const EFFORT = config.effort_level || "medium";
 
 Object.assign(s.env, {
   // 별칭과 백그라운드 작업이 허용 목록 밖의 모델을 부르지 않도록 고정
@@ -108,6 +110,9 @@ Object.assign(s.env, {
   // 캐시 수명을 config의 cache_ttl_minutes(5 또는 60)에 맞춰 고정. 상태줄의 전환 비용 계산도 같은 값을 씀
   CLAUDE_CODE_PROMPT_CACHE_TTL: TTL,
   CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL: TTL,
+  // 사고 강도(effort)를 모든 학생에게 같게 고정. 환경 변수가 /effort, --effort, settings보다 우선하므로
+  // 학생이 바꿔도 적용되지 않음. 모델 선택과 effort가 섞여 비용과 탄소 차이를 해석할 수 없게 되는 것을 막음
+  CLAUDE_CODE_EFFORT_LEVEL: EFFORT,
 });
 // 5분이면 최우선 순위 변수로 한 번 더 고정(다른 설정이나 ENABLE_PROMPT_CACHING_1H가 있어도 5분)
 if (TTL === "5m") s.env.FORCE_PROMPT_CACHING_5M = "1";
@@ -117,6 +122,11 @@ s.subagentPromptCacheTtl = TTL;
 // 1시간 캐시에서는 방치된 대화를 캐시 만료 직전에 자동 압축할 수 있음. 학생 모르게 비용이 나가므로 끔
 if (TTL === "1h") s.idleCompaction = false;
 
+s.effortLevel = EFFORT;
+// 모델별 effort 덮어쓰기가 남아 있으면 지움 (최상위 effortLevel보다 우선하기 때문)
+if (s.modelSettings) for (const k of Object.keys(s.modelSettings)) {
+  if (s.modelSettings[k] && "effortLevel" in s.modelSettings[k]) delete s.modelSettings[k].effortLevel;
+}
 s.promptSuggestionEnabled = false;
 s.availableModels = [idOf(A), idOf(B)];
 s.enforceAvailableModels = true;
