@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# 5주차 사후측정 직후 실행. 대화 기록, 모델 전환 기록, 코드 스냅샷을 학생 연구 코드 이름의 압축 파일로 묶는다.
-#   bash collect.sh S01
+# 5주차 사후측정 직후 실행. 대화 기록, 모델 전환 기록, 코드 스냅샷을 학번 이름의 압축 파일로 묶는다.
+#   bash collect.sh 20261234
 # 만든 파일을 연구진이 정한 경로로 업로드한다. 키가 들어 있는 settings.json은 묶지 않는다.
 set -euo pipefail
-ID="${1:?학생 연구 코드를 인자로 주십시오 (예: S01)}"
+ID="${1:?학번을 인자로 주십시오 (예: bash collect.sh 20261234)}"
 OUT="$HOME/ftc-logs-$ID-$(date +%Y%m%d).tgz"
 cd "$HOME/.claude"
 ITEMS=(projects)
