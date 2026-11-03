@@ -56,6 +56,22 @@ elif [ "${FTC_SKIP_INSTALL:-}" = "1" ]; then
   echo "설치 건너뜀 (FTC_SKIP_INSTALL=1)"
 else
   mkdir -p "$HOME/.claude/ftc"
+  # 설정 파일의 DISABLE_UPDATES=1이 있으면 설치 프로그램이 "Updates are disabled"로 버전 교체를 건너뜀.
+  # 설치 동안만 빼고, 3단계(setup.js)에서 다시 넣음
+  # 중간에 실패해 끝나도 자동 업데이트가 켜진 채 남지 않도록 종료 시 다시 넣음
+  set_updates() {  # $1 = on(값 넣기) | off(값 빼기)
+    [ -f "$HOME/.claude/settings.json" ] || return 0
+    node -e '
+      const fs = require("fs"), [p, mode] = process.argv.slice(1);
+      const s = JSON.parse(fs.readFileSync(p, "utf8")); s.env = s.env || {};
+      if (mode === "off") delete s.env.DISABLE_UPDATES; else s.env.DISABLE_UPDATES = "1";
+      fs.writeFileSync(p, JSON.stringify(s, null, 2) + "\n");
+    ' "$HOME/.claude/settings.json" "$1" || true
+  }
+  if grep -qs '"DISABLE_UPDATES"' "$HOME/.claude/settings.json"; then
+    set_updates off
+    trap 'set_updates on' EXIT
+  fi
   if ! run_with_progress "Claude Code 내려받고 설치하는 중, 1~2분 걸림" "$HOME/.claude/ftc/install.log" \
       bash -c "curl -fsSL https://claude.ai/install.sh | bash -s '$CC_VERSION'"; then
     echo "설치 실패. 같은 명령을 한 번 더 실행해 보고, 또 실패하면 화면을 캡처해 연구진에게 보내 주세요" >&2
