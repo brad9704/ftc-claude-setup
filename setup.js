@@ -113,9 +113,14 @@ Object.assign(s.env, {
   // 사고 강도(effort)를 모든 학생에게 같게 고정. 환경 변수가 /effort, --effort, settings보다 우선하므로
   // 학생이 바꿔도 적용되지 않음. 모델 선택과 effort가 섞여 비용과 탄소 차이를 해석할 수 없게 되는 것을 막음
   CLAUDE_CODE_EFFORT_LEVEL: EFFORT,
+  // 하위 에이전트도 같은 강도로 (2.1.316부터 하위 에이전트는 세션 강도를 물려받지 않을 수 있음)
+  CLAUDE_CODE_SUBAGENT_EFFORT: EFFORT,
   // auto mode의 안전 검사(classifier) 모델을 모델 B(경량)로 고정. 지정하지 않으면 'sonnet' 별칭(= 모델 A)을 먼저 시도해
   // 학생이 고른 모델과 무관하게 모델 A 요청이 생기고, 검사 비용이 학생의 모델 선택에 따라 달라짐
   CLAUDE_CODE_AUTO_MODE_MODEL: idOf(B),
+  // BizRouter는 서버 측 무료 검사(safeguards)를 전달하지 않으므로 요청하지 않음. 켜 두면 첫 검사 때
+  // "this session isn't eligible" 안내가 떠서 학생이 Enter를 눌러야 함. BizRouter가 지원하면 이 줄을 지움
+  CLAUDE_CODE_AUTO_MODE_SERVER: "0",
 });
 // 5분이면 최우선 순위 변수로 한 번 더 고정(다른 설정이나 ENABLE_PROMPT_CACHING_1H가 있어도 5분)
 if (TTL === "5m") s.env.FORCE_PROMPT_CACHING_5M = "1";

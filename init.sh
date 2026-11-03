@@ -5,7 +5,7 @@
 # 다시 실행해도 됨. 같은 버전이 이미 있으면 설치를 건너뛰고, 키 입력에서 Enter만 누르면 기존 키를 그대로 씀.
 set -euo pipefail
 
-CC_VERSION="2.1.308"   # 실험 기간 고정 버전. 2.1.251 이상이어야 모델 전환 훅이 동작함
+CC_VERSION="2.1.316"   # 실험 기간 고정 버전. 2.1.251 이상(모델 전환 훅), 2.1.314 이상(점이 든 게이트웨이 모델 ID 인식)
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN="$HOME/.local/bin"
 export PATH="$BIN:$PATH"
