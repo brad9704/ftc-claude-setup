@@ -1,1 +1,6 @@
-{ "name": "ftc-status", "version": "0.1.0", "description": "수업용: 편집기 확장 대화창 아래에 모델, 이번 턴 금액, 남은 예산, 탄소를 표시" }
+{
+  "name": "ftc-status",
+  "version": "0.2.0",
+  "description": "수업용: 편집기 확장 대화창 아래에 모델, 이번 턴 금액, 남은 예산, 탄소를 표시",
+  "types": "./types/index.d.ts"
+}
