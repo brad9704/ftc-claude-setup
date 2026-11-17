@@ -197,6 +197,18 @@ s.hooks = Object.assign({}, s.hooks, {
   UserPromptSubmit: [{ hooks: [{ type: "command", command: cmd("snapshot.js", "prompt") }] }],
   Stop: [{ hooks: [{ type: "command", command: cmd("snapshot.js", "stop") }] }],
 });
+// 편집기 확장용 상태 표시 플러그인. 확장에는 statusLine이 나오지 않아 같은 내용을 플러그인이 띄운다.
+// 저장소의 mods/ftc-status를 ~/.claude/ftc/mods/로 복사하고 CLAUDE_CODE_PLUGIN_DIRS로 불러오게 한다(확장과 터미널이 같은 settings.json을 읽음)
+{
+  const modSrc = path.join(SRC, "mods", "ftc-status");
+  const modDst = path.join(FTC_DIR, "mods", "ftc-status");
+  if (fs.existsSync(modSrc)) {
+    fs.rmSync(modDst, { recursive: true, force: true });
+    fs.cpSync(modSrc, modDst, { recursive: true });
+    const dirs = String(s.env.CLAUDE_CODE_PLUGIN_DIRS || "").split(":").filter((d) => d && d !== modDst);
+    s.env.CLAUDE_CODE_PLUGIN_DIRS = dirs.concat(modDst).join(":");
+  }
+}
 // 30초마다 다시 그려 캐시가 식으면 전환 비용 안내가 사라지게 함
 s.statusLine = { type: "command", command: cmd("statusline.js"), refreshInterval: 30 };
 

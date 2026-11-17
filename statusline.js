@@ -364,9 +364,20 @@ function main(input) {
 
   let out = line1.join(" | ") + "\n" + lineTok + "\n" + line2.join(" | ");
   const upd = updateHint();
+  // 편집기 확장용 플러그인(ftc-status)이 부르는 한 줄 요약. 터미널에는 상태줄이 따로 있으므로 아무것도 내지 않는다
+  if (process.argv.includes("--plugin")) {
+    if (process.env.CLAUDE_CODE_ENTRYPOINT === "cli") return;
+    let p = [label, "이번 턴 " + fmtWon(turn.n > 0 ? turn.cost : 0)].concat(line2).join(" | ");
+    if (upd) p += "\n" + upd;
+    const h = switchHint(input, m, turn.lastTs);
+    if (h) p += "\n" + h;
+    process.stdout.write(p);
+    return;
+  }
   // 터미널의 budget 명령(node statusline.js --budget). 편집기 확장에는 상태줄이 없어서 예산만 따로 보여 준다
   if (process.argv.includes("--budget")) {
     let b = line2[0] + "\n누적 사용 " + fmtWon(ledger.reduce((a, e) => a + e.cost, 0));
+    b += carbonReady ? " | 누적 탄소 " + fmtG(ledger.reduce((a, e) => a + (e.carbon || 0), 0)) : " | 탄소 계수 미설정";
     if (upd) b += "\n" + upd;
     process.stdout.write(b + "\n");
     return;
