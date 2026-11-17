@@ -96,6 +96,8 @@ claude() {
   esac
   command claude "$@"
 }
+# 이번 주 남은 예산 확인(편집기 확장에는 상태줄이 없음)
+budget() { node "$HOME/.claude/ftc/statusline.js" --budget </dev/null; }
 case $- in *i*) [ "$PWD" = "$HOME" ] && [ -d "$HOME/ftc" ] && cd "$HOME/ftc" ;; esac
 # <<< ftc <<<
 RC

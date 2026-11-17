@@ -364,6 +364,13 @@ function main(input) {
 
   let out = line1.join(" | ") + "\n" + lineTok + "\n" + line2.join(" | ");
   const upd = updateHint();
+  // 터미널의 budget 명령(node statusline.js --budget). 편집기 확장에는 상태줄이 없어서 예산만 따로 보여 준다
+  if (process.argv.includes("--budget")) {
+    let b = line2[0] + "\n누적 사용 " + fmtWon(ledger.reduce((a, e) => a + e.cost, 0));
+    if (upd) b += "\n" + upd;
+    process.stdout.write(b + "\n");
+    return;
+  }
   if (upd) out += "\n" + upd;
   const hint = switchHint(input, m, turn.lastTs);
   if (hint) out += "\n" + hint;

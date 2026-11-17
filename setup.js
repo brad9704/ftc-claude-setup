@@ -61,6 +61,27 @@ const claudeMd = path.join(WORK_DIR, "CLAUDE.md");
   if (wrote) fs.writeFileSync(shaFile, sha(fresh) + "\n");
 }
 
+// 사용자 전역 규칙(~/.claude/CLAUDE.md). 편집기에서 ~/ftc가 아닌 폴더(홈 등)를 열고 확장을 시작해도
+// 작업 폴더 규칙이 처음부터 적용되게 한다. 표시 줄 사이만 새로 쓰고 나머지 내용은 건드리지 않는다.
+{
+  const userMd = path.join(CLAUDE_DIR, "CLAUDE.md");
+  const BEGIN = "<!-- >>> ftc >>> -->", END = "<!-- <<< ftc <<< -->";
+  const block = [
+    BEGIN,
+    "# 수업 작업 폴더",
+    "",
+    "- 수업 작업 폴더는 ~/ftc 이다. 지금 작업 위치가 ~/ftc가 아니어도 새 파일은 모두 ~/ftc 안에 만들고, 명령도 ~/ftc에서 실행한다",
+    "- 작업을 시작하기 전에 ~/ftc/CLAUDE.md를 읽고 그 규칙을 따른다",
+    "- 홈 폴더(~)나 ~/ftc-claude-setup, ~/.claude 안의 파일은 만들거나 고치지 않는다",
+    END,
+  ].join("\n");
+  let cur = "";
+  try { cur = fs.readFileSync(userMd, "utf8"); } catch (e) { /* 처음 */ }
+  const re = new RegExp(BEGIN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[\\s\\S]*?" + END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const next = re.test(cur) ? cur.replace(re, block) : (cur.trim() ? cur.replace(/\s*$/, "\n\n") : "") + block + "\n";
+  if (next !== cur) fs.writeFileSync(userMd, next);
+}
+
 const config = JSON.parse(fs.readFileSync(path.join(FTC_DIR, "config.json"), "utf8"));
 const [A, B] = config.models;
 
