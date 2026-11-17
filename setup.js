@@ -197,6 +197,12 @@ s.hooks = Object.assign({}, s.hooks, {
   UserPromptSubmit: [{ hooks: [{ type: "command", command: cmd("snapshot.js", "prompt") }] }],
   Stop: [{ hooks: [{ type: "command", command: cmd("snapshot.js", "stop") }] }],
 });
+// 동적 워크플로(Ultracode) 끄기. 켜면 한 요청이 여러 서브에이전트로 갈라져 예산을 크게 쓰고,
+// 끄면 /effort와 확장 모델 메뉴의 Ultracode 스위치도 사라진다
+s.disableWorkflows = true;
+s.env.CLAUDE_CODE_DISABLE_WORKFLOWS = "1";
+delete s.ultracode;
+
 // 편집기 확장용 상태 표시 플러그인. 확장에는 statusLine이 나오지 않아 같은 내용을 플러그인이 띄운다.
 // 저장소의 mods/ftc-status를 ~/.claude/ftc/mods/로 복사하고 CLAUDE_CODE_PLUGIN_DIRS로 불러오게 한다(확장과 터미널이 같은 settings.json을 읽음)
 {
