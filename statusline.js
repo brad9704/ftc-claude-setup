@@ -329,11 +329,13 @@ function main(input) {
 
   // 셋째 줄: 이번 주 예산, 탄소
   const line2 = [];
+  let weekSpent = null; // 편집기 창에는 남은 예산 대신 쓴 금액만 보여 준다
   const week = config.weeks.find((w) => now >= Date.parse(w.start) && now < Date.parse(w.end));
   if (week && week.budget_krw != null) {
     const ws = Date.parse(week.start);
     const we = Date.parse(week.end);
     const spent = ledger.filter((e) => e.ts >= ws && e.ts < we).reduce((a, e) => a + e.cost, 0);
+    weekSpent = spent;
     // 연구진이 키 한도를 올려 준 추가 지급액(topup.js가 기록)을 이번 주 예산에 더한다
     let extra = 0;
     try {
@@ -367,7 +369,10 @@ function main(input) {
   // 편집기 확장용 플러그인(ftc-status)이 부르는 한 줄 요약. 터미널에는 상태줄이 따로 있으므로 아무것도 내지 않는다
   if (process.argv.includes("--plugin")) {
     if (process.env.CLAUDE_CODE_ENTRYPOINT === "cli") return;
-    let p = [label, "이번 턴 " + fmtWon(turn.n > 0 ? turn.cost : 0)].concat(line2).join(" | ");
+    const spentItem = weekSpent != null
+      ? (week.name + " 사용 " + fmtWon(weekSpent))
+      : ("누적 사용 " + fmtWon(ledger.reduce((a, e) => a + e.cost, 0)));
+    let p = [label, "이번 턴 " + fmtWon(turn.n > 0 ? turn.cost : 0), spentItem].concat(line2.slice(1)).join(" | ");
     if (upd) p += "\n" + upd;
     const h = switchHint(input, m, turn.lastTs);
     if (h) p += "\n" + h;
