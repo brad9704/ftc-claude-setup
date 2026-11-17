@@ -132,6 +132,7 @@ say "3/3 설정 적용"
 echo "설정 파일 쓰는 중"
 FTC_KEY="$KEY" node "$DIR/setup.js"
 unset KEY
+node "$DIR/install-ext.js" || true
 
 say "완료"
 echo "작업 폴더 ~/ftc 에서 새 터미널을 엽니다. 이제 claude 를 입력하면 시작됩니다"
