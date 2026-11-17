@@ -69,7 +69,9 @@ async function main() {
   if (!ver || !url) throw new Error("Open VSX 응답에 버전이나 다운로드 주소가 없음");
   console.log("Claude Code 확장 " + ver + " 받는 중");
 
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "ftc-ext-"));
+  // /tmp는 홈과 다른 디스크라 옮기기(rename)가 안 됨. 같은 디스크인 ~/.codeoss 아래에서 푼다
+  fs.mkdirSync(CODEOSS, { recursive: true });
+  const tmp = fs.mkdtempSync(path.join(CODEOSS, ".ftc-ext-"));
   try {
     const vsix = path.join(tmp, "ext.vsix");
     fs.writeFileSync(vsix, await get(url));
