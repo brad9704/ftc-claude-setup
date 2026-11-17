@@ -81,6 +81,24 @@ fi
 if ! grep -qs '\.local/bin' "$HOME/.bashrc"; then
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
 fi
+# 다시 접속하면 Cloud Shell은 홈 폴더에서 시작한다. 거기서 claude를 실행하면 작업 규칙(~/ftc/CLAUDE.md)이 빠지고
+# 대화가 다른 폴더 기록으로 갈라지므로, ~/ftc 밖에서 claude를 실행하면 ~/ftc로 옮긴 뒤 실행한다.
+# 표시 줄 사이의 내용은 init.sh를 다시 실행할 때마다 새로 쓴다
+if [ -f "$HOME/.bashrc" ]; then
+  sed -i '/^# >>> ftc >>>$/,/^# <<< ftc <<<$/d' "$HOME/.bashrc"
+fi
+cat >> "$HOME/.bashrc" <<'RC'
+# >>> ftc >>>
+claude() {
+  case "$PWD/" in
+    "$HOME/ftc/"*) ;;
+    *) echo "수업 작업 폴더(~/ftc)로 이동해서 실행합니다"; cd "$HOME/ftc" || return 1 ;;
+  esac
+  command claude "$@"
+}
+case $- in *i*) [ "$PWD" = "$HOME" ] && [ -d "$HOME/ftc" ] && cd "$HOME/ftc" ;; esac
+# <<< ftc <<<
+RC
 if [ "${FTC_SKIP_INSTALL:-}" != "1" ]; then
   current="$(claude --version 2>/dev/null | awk '{print $1}' || true)"
   if [ "$current" != "$CC_VERSION" ]; then

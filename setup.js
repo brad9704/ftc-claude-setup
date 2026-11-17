@@ -34,11 +34,32 @@ for (const f of ["config.json", "statusline.js", "switch-log.js", "snapshot.js",
   try { fs.unlinkSync(path.join(FTC_DIR, "update-check.json")); } catch (e) { /* 없음 */ }
 }
 
-// 작업 폴더와 CLAUDE.md(스택 지정만). 학생이 이미 고쳤을 수 있으므로 없을 때만 만든다.
+// 작업 폴더와 CLAUDE.md. 학생이 직접 고친 CLAUDE.md는 덮어쓰지 않는다.
+// 지금 파일이 연구진이 배포했던 판 그대로이면 새 판으로 바꾸고, 학생이 고쳤으면 그대로 두고 새 판을 CLAUDE.ftc-new.md로 둔다.
 const WORK_DIR = path.join(HOME, "ftc");
 fs.mkdirSync(WORK_DIR, { recursive: true });
 const claudeMd = path.join(WORK_DIR, "CLAUDE.md");
-if (!fs.existsSync(claudeMd)) fs.copyFileSync(path.join(SRC, "CLAUDE.md"), claudeMd);
+{
+  const crypto = require("crypto");
+  const sha = (t) => crypto.createHash("sha256").update(t.replace(/\r\n/g, "\n")).digest("hex");
+  const fresh = fs.readFileSync(path.join(SRC, "CLAUDE.md"), "utf8");
+  const shaFile = path.join(FTC_DIR, "claude-md.sha");
+  // 이전에 배포한 판들의 해시. 판을 바꿀 때마다 직전 판의 해시를 여기에 더한다
+  const known = new Set([
+    "ac39fb5bfbcf5c0766da51b36f5c941dd75355feafbe48716e35a5df46a1135b", // 1주차 판(HTML, CSS, JS, p5.js만)
+  ]);
+  try { known.add(fs.readFileSync(shaFile, "utf8").trim()); } catch (e) { /* 처음 */ }
+  let wrote = false;
+  if (!fs.existsSync(claudeMd)) {
+    fs.writeFileSync(claudeMd, fresh); wrote = true;
+  } else {
+    const cur = sha(fs.readFileSync(claudeMd, "utf8"));
+    if (cur === sha(fresh)) wrote = true;
+    else if (known.has(cur)) { fs.writeFileSync(claudeMd, fresh); wrote = true; console.log("~/ftc/CLAUDE.md를 새 작업 규칙으로 바꿈"); }
+    else { fs.writeFileSync(path.join(WORK_DIR, "CLAUDE.ftc-new.md"), fresh); console.log("~/ftc/CLAUDE.md를 직접 고친 흔적이 있어 그대로 둠. 새 규칙은 ~/ftc/CLAUDE.ftc-new.md"); }
+  }
+  if (wrote) fs.writeFileSync(shaFile, sha(fresh) + "\n");
+}
 
 const config = JSON.parse(fs.readFileSync(path.join(FTC_DIR, "config.json"), "utf8"));
 const [A, B] = config.models;

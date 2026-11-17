@@ -220,7 +220,8 @@ const server = http.createServer((req, res) => {
 
 server.on("error", (e) => {
   if (e.code === "EADDRINUSE") {
-    console.log(PORT + " 포트에서 이미 실행 중. 웹 미리보기에서 " + PORT + " 포트를 열면 됨");
+    // serve.js가 이미 떠 있을 수도, 학생이 만든 서버(Flask 등)가 쓰고 있을 수도 있음
+    console.log(PORT + " 포트를 이미 어떤 프로그램이 쓰는 중(serve.js 또는 직접 만든 서버). 확인: ss -ltnp | grep " + PORT + ". 웹 미리보기에서 " + PORT + " 포트를 열어 볼 것");
     process.exit(0);
   }
   console.error(e.message);
