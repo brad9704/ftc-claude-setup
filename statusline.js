@@ -373,6 +373,7 @@ function main(input) {
       ? (week.name + " 사용 " + fmtWon(weekSpent))
       : ("누적 사용 " + fmtWon(ledger.reduce((a, e) => a + e.cost, 0)));
     let p = [label, "이번 턴 " + fmtWon(turn.n > 0 ? turn.cost : 0), spentItem].concat(line2.slice(1)).join(" | ");
+    p += "\n" + lineTok;
     if (upd) p += "\n" + upd;
     const h = switchHint(input, m, turn.lastTs);
     if (h) p += "\n" + h;
