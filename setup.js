@@ -47,6 +47,8 @@ const claudeMd = path.join(WORK_DIR, "CLAUDE.md");
   // 이전에 배포한 판들의 해시. 판을 바꿀 때마다 직전 판의 해시를 여기에 더한다
   const known = new Set([
     "ac39fb5bfbcf5c0766da51b36f5c941dd75355feafbe48716e35a5df46a1135b", // 1주차 판(HTML, CSS, JS, p5.js만)
+    "49a113820446d56900f2fe9a3b8031c1231687995646b7d79a7ce2b9358198ba", // 11/17 판(라이브러리 자유, 8080)
+    "90e79840652d89f034d234190bf68a63de36604a2f73240ed15a774e82bfa334", // 11/17 오후 판(파일 300줄 규칙)
   ]);
   try { known.add(fs.readFileSync(shaFile, "utf8").trim()); } catch (e) { /* 처음 */ }
   let wrote = false;
@@ -178,6 +180,12 @@ if (s.modelSettings) for (const k of Object.keys(s.modelSettings)) {
   if (s.modelSettings[k] && "effortLevel" in s.modelSettings[k]) delete s.modelSettings[k].effortLevel;
 }
 s.promptSuggestionEnabled = false;
+// 권한 모드는 제한하지 않는다(auto 모드 포함). 한때 넣었던 auto 차단 설정이 남아 있으면 지운다
+if (s.permissions) {
+  if (s.permissions.disableAutoMode === "disable") delete s.permissions.disableAutoMode;
+  if (s.permissions.defaultMode === "default") delete s.permissions.defaultMode;
+  if (!Object.keys(s.permissions).length) delete s.permissions;
+}
 s.availableModels = [idOf(A), idOf(B)];
 s.enforceAvailableModels = true;
 s.modelPicker = {
